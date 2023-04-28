@@ -1,0 +1,8 @@
+.popup__input_type_error{
+  border-bottom: 1px solid red;
+}
+
+.popup__input_type_error:focus{
+  border-bottom: 1px solid red;
+}
+

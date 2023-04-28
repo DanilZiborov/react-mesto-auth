@@ -1,0 +1,23 @@
+.profile__edit-button {
+  /* В макете у edit-button нет закругления. Возможно, имелась в виду add-button, там я поправил */
+  width: 18px;
+  height: 18px;
+  background-color: transparent;
+  background-image: url(../../../images/profile__edit-button.svg);
+  background-size: cover;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.profile__edit-button:hover {
+  opacity: 60%;
+}
+
+@media (min-width: 768px) {
+  .profile__edit-button {
+    width: 24px;
+    height: 24px;
+  }
+}
