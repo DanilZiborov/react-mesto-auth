@@ -1,4 +1,5 @@
 import React from 'react';
+import {BrowserRouter, Route, Routes, Navigate, useNavigate} from 'react-router-dom';
 
 import '../index.css';
 import Header from './Header';
@@ -15,6 +16,8 @@ import DeleteCardPopup from './DeleteCardPopup';
 
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
+import ProtectedRouteElement from './ProtectedRoute';
+
 function App() {
 
   const [isEditProfilePopupOpen, setEditProfilePopupOpen] = React.useState(false);
@@ -30,6 +33,8 @@ function App() {
   const [cards, setCards] = React.useState([]);
 
   const [isPopupLoading, setIsPopupLoading] = React.useState(false);
+
+  const [loggedIn, setLoggedIn] = React.useState(true);
 
   React.useEffect(() => {
     api.getUserInfo()
@@ -148,14 +153,21 @@ function App() {
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
         <Header />
-        <Main
-          cards={cards}
-          onEditAvatar={handleEditAvatarClick}
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onCardClick={handleCardClick}
-          onCardLike={handleCardLike}
-          onCardDeleteButtonClick={handleCardDeleteButtonClick} />
+        <Routes>
+
+          <Route path="/" element={<ProtectedRouteElement
+            element={Main}
+            loggedIn={loggedIn}
+            cards={cards}
+            onEditAvatar={handleEditAvatarClick}
+            onEditProfile={handleEditProfileClick}
+            onAddPlace={handleAddPlaceClick}
+            onCardClick={handleCardClick}
+            onCardLike={handleCardLike}
+            onCardDeleteButtonClick={handleCardDeleteButtonClick}
+          />} />
+
+        </Routes>
         <Footer />
 
         <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} isPopupLoading={isPopupLoading} />
