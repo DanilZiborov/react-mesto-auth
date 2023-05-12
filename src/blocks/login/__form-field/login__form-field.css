@@ -1,0 +1,8 @@
+.login__form-field {
+  display: block;
+  margin-bottom: 30px;
+}
+
+.login__form-field:last-of-type {
+  margin-bottom: 216px;
+}

@@ -1,0 +1,8 @@
+.tooltip_opened {
+  visibility: visible;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .5s;
+}

@@ -1,0 +1,14 @@
+.header__link {
+  display: block;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.22;
+  text-decoration: none;
+}
+
+/* когда ссылка работает на разлогинивание пользователя, она становится третьим потомком */
+
+.header__link:nth-child(3) {
+  color: #A9A9A9;
+
+}

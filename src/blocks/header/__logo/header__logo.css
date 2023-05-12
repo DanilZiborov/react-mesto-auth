@@ -1,10 +1,11 @@
 .header__logo {
+  flex-grow: 1;
   width: 104px;
   height: 24px;
   margin: 0 0 32px 27px;
   background-image: url(../../../images/header__logo.svg  );
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
 }
 
 @media (min-width: 768px) {

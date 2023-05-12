@@ -1,5 +1,5 @@
 import React from 'react';
-import {BrowserRouter, Route, Routes, Navigate, useNavigate} from 'react-router-dom';
+import { Route, Routes, useNavigate} from 'react-router-dom';
 
 import '../index.css';
 import Header from './Header';
@@ -16,44 +16,51 @@ import DeleteCardPopup from './DeleteCardPopup';
 
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
+import apiAuth from '../utils/apiAuth';
 import ProtectedRouteElement from './ProtectedRoute';
+import Login from './Login';
+import Register from './Register';
+import InfoTooltip from './InfoTooltip';
 
 function App() {
+
+  const navigate = useNavigate();
 
   const [isEditProfilePopupOpen, setEditProfilePopupOpen] = React.useState(false);
   const [isAddPlacePopupOpen, setAddPlacePopupOpen] = React.useState(false);
   const [isEditAvatarPopupOpen, setEditAvatarPopupOpen] = React.useState(false);
-
+  const [isInfoTooltipOpen, setInfoTooltipOpen] = React.useState(false);
   const [selectedCard, setSelectedCard] = React.useState({ name: '', link: '' });
-
   const [cardToDelete, setCardToDelete] = React.useState({ _id: '' });
-
   const [currentUser, setCurrentUser] = React.useState({ name: '', about: '' });
-
   const [cards, setCards] = React.useState([]);
-
   const [isPopupLoading, setIsPopupLoading] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = React.useState('');
+  const [isRegisterSuccess, setIsRegisterSuccess] = React.useState(true);
+  const [email, setEmail] = React.useState('mrbigdick@shitmail.com');
 
-  const [loggedIn, setLoggedIn] = React.useState(true);
+  React.useEffect(
+    () => {
 
-  React.useEffect(() => {
-    api.getUserInfo()
-      .then((res) => {
-        setCurrentUser(res);
-      })
-      .catch(err => {
-        console.error(`Проблема c загрузкой информации пользователя, ${err}`);
-      });
+      handleTokenCheck()
 
-    api.getInitialCards()
-      .then((res) => {
-        setCards(res);
-      })
-      .catch(err => {
-        console.error(`Проблема c загрузкой начальных карточек, ${err}`);
-      });
+      api.getUserInfo()
+        .then((res) => {
+          setCurrentUser(res);
+        })
+        .catch(err => {
+          console.error(`Проблема c загрузкой информации пользователя, ${err}`);
+        });
 
-  }, [])
+      api.getInitialCards()
+        .then((res) => {
+          setCards(res);
+        })
+        .catch(err => {
+          console.error(`Проблема c загрузкой начальных карточек, ${err}`);
+        });
+
+    }, [])
 
   function handleCardClick(card) {
     setSelectedCard({ name: card.name, link: card.link });
@@ -139,10 +146,63 @@ function App() {
     setAddPlacePopupOpen(true);
   }
 
+  function handleSignUp(password, email) {
+    apiAuth.register(password, email)
+      .then(() => {
+        navigate('/signin', { replace: true });
+        setIsRegisterSuccess(true);
+      })
+      .catch((err) => {
+        setIsRegisterSuccess(false);
+        console.error(err);
+      })
+      .finally(() => {
+        setInfoTooltipOpen(true);
+      })
+  }
+
+  function handleSignIn(password, email) {
+    apiAuth.authorize(password, email)
+      .then((res) => {
+        if (res.token) {
+          localStorage.setItem('jwt', res.token);
+          setIsLoggedIn(true);
+          setEmail(email);
+          navigate('/', { replace: true });
+
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+  }
+
+  function handleTokenCheck() {
+    if(localStorage.getItem('jwt')) {
+      const token = localStorage.getItem('jwt');
+      apiAuth.checkToken(token)
+        .then(res => {
+          setIsLoggedIn(true);
+          setEmail(res.data.email);
+          navigate('/', {replace: true});
+        })
+        .catch(err => {
+          console.error(err);
+        })
+    }
+  }
+
+  function handleSignOut() {
+    localStorage.removeItem('jwt');
+    setIsLoggedIn(false);
+    navigate('/', {replace:true});
+  }
+
   function closeAllPopups() {
     setEditAvatarPopupOpen(false);
     setEditProfilePopupOpen(false);
     setAddPlacePopupOpen(false);
+    setInfoTooltipOpen(false);
     setCardToDelete({ _id: '' });
     setSelectedCard({ name: '', link: '' });
 
@@ -152,12 +212,12 @@ function App() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header />
+        <Header isLoggedIn={isLoggedIn} email={email} onSignOut={handleSignOut}/>
         <Routes>
 
           <Route path="/" element={<ProtectedRouteElement
             element={Main}
-            loggedIn={loggedIn}
+            isLoggedIn={isLoggedIn}
             cards={cards}
             onEditAvatar={handleEditAvatarClick}
             onEditProfile={handleEditProfileClick}
@@ -167,8 +227,13 @@ function App() {
             onCardDeleteButtonClick={handleCardDeleteButtonClick}
           />} />
 
+          <Route path="/signin" element={<Login onSignIn={handleSignIn}/>} />
+          <Route path="/signup" element={<Register onSignUp={handleSignUp} />} />
+
+
         </Routes>
-        <Footer />
+
+        {isLoggedIn && <Footer />}
 
         <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} isPopupLoading={isPopupLoading} />
 
@@ -179,6 +244,8 @@ function App() {
         <DeleteCardPopup isOpen={cardToDelete._id} onClose={closeAllPopups} onDeleteCard={handleDeleteCard} isPopupLoading={isPopupLoading} />
 
         <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+
+        <InfoTooltip isRegisterSuccess={isRegisterSuccess} isOpen={isInfoTooltipOpen} onClose={closeAllPopups}/>
 
       </div>
     </CurrentUserContext.Provider>
