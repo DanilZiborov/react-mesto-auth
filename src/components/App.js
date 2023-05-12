@@ -1,7 +1,6 @@
 import React from 'react';
-import { Route, Routes, useNavigate} from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 
-import '../index.css';
 import Header from './Header';
 import Main from './Main';
 import Footer from './Footer';
@@ -35,32 +34,36 @@ function App() {
   const [currentUser, setCurrentUser] = React.useState({ name: '', about: '' });
   const [cards, setCards] = React.useState([]);
   const [isPopupLoading, setIsPopupLoading] = React.useState(false);
-  const [isLoggedIn, setIsLoggedIn] = React.useState('');
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isRegisterSuccess, setIsRegisterSuccess] = React.useState(true);
-  const [email, setEmail] = React.useState('mrbigdick@shitmail.com');
+  const [email, setEmail] = React.useState('');
 
   React.useEffect(
     () => {
+        handleTokenCheck();
+    }, []);
 
-      handleTokenCheck()
+  React.useEffect(
+    () => {
+      if (isLoggedIn === true) {
+        api.getUserInfo()
+          .then((res) => {
+            setCurrentUser(res);
+          })
+          .catch(err => {
+            console.error(`Проблема c загрузкой информации пользователя, ${err}`);
+          });
 
-      api.getUserInfo()
-        .then((res) => {
-          setCurrentUser(res);
-        })
-        .catch(err => {
-          console.error(`Проблема c загрузкой информации пользователя, ${err}`);
-        });
+        api.getInitialCards()
+          .then((res) => {
+            setCards(res);
+          })
+          .catch(err => {
+            console.error(`Проблема c загрузкой начальных карточек, ${err}`);
+          });
+      }
 
-      api.getInitialCards()
-        .then((res) => {
-          setCards(res);
-        })
-        .catch(err => {
-          console.error(`Проблема c загрузкой начальных карточек, ${err}`);
-        });
-
-    }, [])
+    }, [isLoggedIn]);
 
   function handleCardClick(card) {
     setSelectedCard({ name: card.name, link: card.link });
@@ -178,13 +181,15 @@ function App() {
   }
 
   function handleTokenCheck() {
-    if(localStorage.getItem('jwt')) {
+    console.log('чекание токена');
+    if (localStorage.getItem('jwt')) {
+
       const token = localStorage.getItem('jwt');
       apiAuth.checkToken(token)
         .then(res => {
           setIsLoggedIn(true);
           setEmail(res.data.email);
-          navigate('/', {replace: true});
+          navigate('/', { replace: true });
         })
         .catch(err => {
           console.error(err);
@@ -195,7 +200,7 @@ function App() {
   function handleSignOut() {
     localStorage.removeItem('jwt');
     setIsLoggedIn(false);
-    navigate('/', {replace:true});
+    navigate('/', { replace: true });
   }
 
   function closeAllPopups() {
@@ -212,7 +217,7 @@ function App() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header isLoggedIn={isLoggedIn} email={email} onSignOut={handleSignOut}/>
+        <Header isLoggedIn={isLoggedIn} email={email} onSignOut={handleSignOut} />
         <Routes>
 
           <Route path="/" element={<ProtectedRouteElement
@@ -227,8 +232,9 @@ function App() {
             onCardDeleteButtonClick={handleCardDeleteButtonClick}
           />} />
 
-          <Route path="/signin" element={<Login onSignIn={handleSignIn}/>} />
+          <Route path="/signin" element={<Login onSignIn={handleSignIn} />} />
           <Route path="/signup" element={<Register onSignUp={handleSignUp} />} />
+          <Route path="*" element={<Navigate to="/signin" replace={true}/>} />
 
 
         </Routes>
@@ -245,7 +251,7 @@ function App() {
 
         <ImagePopup card={selectedCard} onClose={closeAllPopups} />
 
-        <InfoTooltip isRegisterSuccess={isRegisterSuccess} isOpen={isInfoTooltipOpen} onClose={closeAllPopups}/>
+        <InfoTooltip isRegisterSuccess={isRegisterSuccess} isOpen={isInfoTooltipOpen} onClose={closeAllPopups} />
 
       </div>
     </CurrentUserContext.Provider>
